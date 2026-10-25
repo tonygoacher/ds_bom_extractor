@@ -124,4 +124,5 @@ saved it.
 
 ## Licence
 
-Add a licence of your choice (for example MIT) before publishing.
+[BSD Zero Clause Licence (0BSD)](LICENSE). You can use, copy, modify and distribute this
+software for any purpose, with or without fee, and without any attribution requirement.

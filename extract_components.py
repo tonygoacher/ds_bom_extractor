@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: 0BSD
+# Copyright (C) 2026 by Tony Goacher
 """
 extract_components.py - list the components in a DesignSpark PCB schematic file.
 
