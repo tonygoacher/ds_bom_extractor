@@ -29,6 +29,10 @@ Options:
                                         (e.g. C805/R805) - then use the footprint
                                         (0805).
     --include-power         also list power/ground symbols (REF1, REF2 ...)
+    --report                grouped parts list instead: identical type+value are
+                            combined with a count, e.g.
+                                R1, R2, R3 | 3 off | 22k | 0805
+                            (written to <input>_report.csv / .txt)
 """
 import argparse
 import csv
@@ -234,6 +238,19 @@ def natural_key(ref):
     return (m.group(1).upper(), int(m.group(2))) if m else (ref, 0)
 
 
+def group_parts(parts):
+    """Group parts with the same type and value -> list of (refs, count, value, type)."""
+    groups = {}
+    for p in parts:
+        groups.setdefault((p["type"], p["value"]), []).append(p["ref"])
+    rows = []
+    for (typ, val), refs in groups.items():
+        refs.sort(key=natural_key)
+        rows.append((refs, len(refs), val, typ))
+    rows.sort(key=lambda r: natural_key(r[0][0]))
+    return rows
+
+
 def read_design(path):
     with open(path, "rb") as f:
         data = f.read()
@@ -246,6 +263,8 @@ def main():
     ap.add_argument("-o", "--output", help="output path ('-' for screen). Only valid with one input file.")
     ap.add_argument("--format", choices=["csv", "txt"], default="csv")
     ap.add_argument("--type-source", choices=["auto", "component", "footprint"], default="auto")
+    ap.add_argument("--report", action="store_true",
+                    help="group identical type+value parts with a count (BOM-style)")
     ap.add_argument("--include-power", action="store_true", help="include power/ground symbols (REFn)")
     args = ap.parse_args()
     if args.output and len(args.files) > 1:
@@ -263,10 +282,24 @@ def main():
         for p in parts:
             p["type"] = choose_type(p, args.type_source)
 
-        out = args.output or (os.path.splitext(path)[0] + "_components." + args.format)
+        suffix = "_report." if args.report else "_components."
+        out = args.output or (os.path.splitext(path)[0] + suffix + args.format)
         fh = sys.stdout if out == "-" else open(out, "w", newline="", encoding="utf-8")
         try:
-            if args.format == "csv":
+            if args.report:
+                rows = group_parts(parts)
+                if args.format == "csv":
+                    w = csv.writer(fh)
+                    w.writerow(["RefDes", "Qty", "Value", "Type"])
+                    for refs, n, val, typ in rows:
+                        w.writerow([", ".join(refs), n, val, typ])
+                else:
+                    rw = max(len(", ".join(r[0])) for r in rows) if rows else 0
+                    vw = max([len(r[2]) for r in rows] + [0])
+                    for refs, n, val, typ in rows:
+                        fh.write("%s , %-6s , %s , %s\n" % (
+                            ", ".join(refs).ljust(rw), "%d off" % n, val.ljust(vw), typ))
+            elif args.format == "csv":
                 w = csv.writer(fh)
                 w.writerow(["RefDes", "Type", "Value", "Footprint", "Component"])
                 for p in parts:
