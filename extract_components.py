@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-extract_components.py - list the components in a DesignSpark PCB schematic/PCB file.
+extract_components.py - list the components in a DesignSpark PCB schematic file.
 
 DesignSpark PCB saves designs as an OLE2 "compound document" (even when the
 file is named .hex, .asc, etc.). The design lives in a stream called
