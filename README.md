@@ -1,7 +1,7 @@
 # DesignSpark PCB Component Extractor
 
 A small, dependency-free Python script that pulls a parts list (bill of materials) out of
-DesignSpark PCB design files, without needing the paid BOM export feature.
+DesignSpark PCB .sch design files.
 
 It reads the design file directly and lists every component with its reference, type and
 value. It can also produce a grouped, BOM-style report with quantities.
